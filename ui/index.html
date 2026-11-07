@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1b1d21">
+<title>fuckmooc · 网课助手</title>
+<link rel="icon" href="/favicon.png" type="image/png">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<div class="app">
+  <nav class="nav">
+    <div class="brand">fuckmooc</div>
+    <button class="nav-item active" data-page="home">首页</button>
+    <button class="nav-item" data-page="courses">课程</button>
+    <button class="nav-item" data-page="settings">设置</button>
+    <button class="nav-item" data-page="records">记录</button>
+    <button class="nav-item" data-page="about">关于</button>
+    <div class="nav-foot">本地运行</div>
+  </nav>
+
+  <main class="main">
+    <header class="status">
+      <div class="status-left">
+        <span class="dot" id="status-dot"></span>
+        <strong id="status-label">待命</strong>
+        <span class="muted" id="status-phase">idle</span>
+        <span class="muted" id="status-course" style="cursor:pointer" title="点击管理课程">尚未选择课程</span>
+      </div>
+      <div class="status-right">
+        <button id="btn-pause" class="btn" disabled>暂停</button>
+        <button id="btn-stop" class="btn" disabled>停止</button>
+      </div>
+    </header>
+
+    <section class="page active" id="page-home">
+      <div class="card" id="boot-error" hidden>
+        <strong>界面数据加载失败</strong>
+        <p class="muted">本地服务没有响应。程序可能正在启动，或已经退出。</p>
+        <button class="btn" id="btn-retry-boot">重试</button>
+      </div>
+      <div class="card home-start">
+        <span class="chip active">中国大学 MOOC</span>
+        <button id="btn-start" class="btn primary">一键完成</button>
+      </div>
+
+      <div class="card" id="empty-course" hidden>
+        <strong>还没添加课程</strong>
+        <p class="muted">先到「课程」页粘贴课程地址，再回来点一键完成。</p>
+        <button class="btn" id="btn-goto-courses">添加课程</button>
+      </div>
+
+      <div class="card" id="progress-card">
+        <div class="row"><span>总体进度</span><span class="muted" id="overall-text">0 / 0</span></div>
+        <div class="bar"><div class="bar-fill" id="overall-bar"></div></div>
+        <div class="row gap-top"><span id="current-label">当前任务</span><span class="muted" id="current-text">—</span></div>
+        <div class="bar"><div class="bar-fill teal" id="current-bar"></div></div>
+      </div>
+
+      <div class="card" id="summary-card" hidden>
+        <strong>本次运行汇总</strong>
+        <div class="summary-grid" id="summary-grid"></div>
+      </div>
+
+      <div class="card grow">
+        <div class="card-head"><strong>任务清单</strong><span class="muted" id="task-count">按章节查看</span></div>
+        <div id="task-list" class="task-list"><p class="muted">任务开始后，这里会按章节显示每一项。</p></div>
+      </div>
+    </section>
+
+    <section class="page" id="page-courses">
+      <div class="card">
+        <strong>课程地址</strong>
+        <p class="muted">选择课程平台，然后把课程页面的地址粘贴进来，可以加多门。</p>
+        <div class="wizard-platforms" id="course-platforms"></div>
+        <div id="course-list"></div>
+        <div class="form-row" style="border:0">
+          <input id="course-input" class="search" style="flex:1" placeholder="粘贴课程地址">
+          <button class="btn" id="btn-add-course">添加</button>
+        </div>
+        <button class="btn primary" id="btn-save-courses">保存课程</button>
+      </div>
+    </section>
+
+    <section class="page" id="page-settings">
+      <div class="card">
+        <strong>常规</strong>
+        <div class="form-row"><label>外观</label>
+          <span class="chips" id="theme-chips">
+            <button type="button" class="chip" data-theme-setting="auto">跟随系统</button>
+            <button type="button" class="chip" data-theme-setting="light">浅色</button>
+            <button type="button" class="chip" data-theme-setting="dark">深色</button>
+          </span>
+        </div>
+        <div class="form-row"><label>字号</label>
+          <button class="btn small" data-font="normal">标准</button>
+          <button class="btn small" data-font="large">大字号</button>
+        </div>
+        <div class="form-row"><label>关窗行为</label>
+          <span class="chips" id="close-chips">
+            <button type="button" class="chip" data-close-action="ask">每次询问</button>
+            <button type="button" class="chip" data-close-action="tray">最小化到托盘</button>
+            <button type="button" class="chip" data-close-action="exit">直接退出</button>
+          </span>
+        </div>
+        <div class="form-row"><label>答题模型</label>
+          <span class="muted" id="llm-summary">未配置</span>
+          <button class="btn small" id="btn-config-llm" style="margin-left:auto">配置模型</button>
+        </div>
+        <p class="muted small">不配置也能正常使用：自带题库、多引擎搜索与免费模型三层答题。</p>
+        <button class="btn primary" id="btn-save-settings">保存设置</button>
+      </div>
+      <div class="card">
+        <strong>运行方式</strong>
+        <div class="form-row"><label>只扫描课程结构</label><input type="checkbox" id="opt-probe"></div>
+        <div class="form-row"><label>只做测验</label><input type="checkbox" id="opt-quiz"></div>
+        <div class="form-row"><label>跳过测验</label><input type="checkbox" id="opt-noQuiz"></div>
+        <div class="form-row"><label>演练（不交卷）</label><input type="checkbox" id="opt-drill"></div>
+        <div class="form-row"><label>只处理前 N 项</label><input id="opt-limit" type="number" min="0" class="search"></div>
+        <div class="form-row"><label>播放倍速</label><input id="opt-rate" type="number" min="1" max="2" step="0.5" class="search"></div>
+        <div class="form-row"><label>文档停留秒数</label><input id="opt-stay" type="number" min="1" class="search"></div>
+        <div class="form-row"><label>测验预算分钟</label><input id="opt-budget" type="number" min="1" class="search"></div>
+        <div class="form-row"><label>空题容忍比例</label><input id="opt-miss" type="number" min="0" max="1" step="0.05" class="search"></div>
+        <p class="muted small">演练模式只看作答过程，不交卷、不消耗提交机会。</p>
+      </div>
+    </section>
+
+    <section class="page" id="page-records">
+      <div class="card">
+        <strong>记录</strong>
+        <div class="summary-grid" id="record-skeleton" hidden>
+          <div class="skeleton-block"></div><div class="skeleton-block"></div>
+          <div class="skeleton-block"></div><div class="skeleton-block"></div>
+        </div>
+        <div class="summary-grid" id="record-stats"></div>
+        <p class="muted" id="record-error" hidden>记录加载失败。
+          <button class="btn small" id="btn-retry-records">重试</button></p>
+        <p class="muted small" id="record-login"></p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+          <button class="btn" data-clear="progress">清空完成记录</button>
+          <button class="btn" data-clear="logs">清空运行日志</button>
+          <button class="btn" data-clear="profile">清空登录态</button>
+          <button class="btn" id="btn-restore" hidden>恢复上次清空的数据</button>
+        </div>
+        <p class="muted small" id="record-note">清空的数据会保留一份备份，可在本页「恢复」；再次清空会覆盖上一份备份。</p>
+      </div>
+    </section>
+
+    <section class="page" id="page-about">
+      <div class="card">
+        <strong>fuckmooc · 网课助手</strong>
+        <p class="muted">自动完成中国大学 MOOC 的视频、课件、测验与讨论。</p>
+        <p class="muted small">版本 <span id="about-version">—</span></p>
+        <p class="muted small">仅供个人学习使用，请遵守所在学校的课程要求。</p>
+        <button class="btn" id="btn-quit">退出程序</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<section class="dock" id="dock">
+  <div class="dock-head">
+    <strong>运行日志</strong>
+    <span class="chips" id="level-chips">
+      <button class="chip active" data-level="all">全部</button>
+      <button class="chip" data-level="info">信息</button>
+      <button class="chip" data-level="success">成功</button>
+      <button class="chip" data-level="warn">警告</button>
+      <button class="chip" data-level="error">仅出错</button>
+    </span>
+    <input id="log-search" class="search" placeholder="筛选日志">
+    <button class="btn small" id="btn-newest" hidden>回到最新</button>
+    <button class="btn small" id="btn-export">导出</button>
+    <button class="btn small" id="btn-dock-toggle">收起</button>
+    <span class="muted small" id="pending-badge"></span>
+  </div>
+  <div class="dock-body" id="log-body"></div>
+</section>
+
+<div class="toasts" id="toasts"></div>
+<div class="conn-bar" id="conn-bar" hidden>与服务已断开，正在重连…</div>
+<div class="overlay" id="overlay" hidden><div class="dialog" id="dialog"></div></div>
+
+<!-- 答题模型配置浮窗 -->
+<section class="overlay wizard-overlay" id="llm-overlay" hidden>
+  <div class="wizard llm-dialog">
+    <div class="wizard-head">
+      <strong>配置答题模型</strong>
+    </div>
+    <div class="wizard-body">
+      <p class="muted small" style="margin-top:0">不配置也能正常使用：自带题库、多引擎搜索与免费模型三层答题。配置后每题优先问模型（OpenAI 兼容接口，按量计费）。</p>
+      <div class="wizard-platforms" id="llm-presets">
+        <button type="button" class="wizard-platform" data-llm-preset="deepseek">DeepSeek 官方</button>
+        <button type="button" class="wizard-platform" data-llm-preset="custom">自定义 API</button>
+      </div>
+      <div class="form-row"><label>启用</label>
+        <label class="muted"><input type="checkbox" id="llm-enabled"> 启用（答题优先问它）</label>
+      </div>
+      <div class="form-row"><label>API 地址</label>
+        <input id="llm-base-url" class="search" style="flex:1" placeholder="https://api.example.com">
+      </div>
+      <div class="form-row"><label>模型</label>
+        <input id="llm-model" class="search" style="flex:1" placeholder="模型 ID，如 deepseek-chat">
+      </div>
+      <div class="catalog-head">
+        <span class="muted small">模型目录</span>
+        <span class="catalog-links">
+          <button type="button" class="btn link" id="llm-restore-model">恢复默认模型</button>
+          <button type="button" class="btn link" id="llm-fetch-models">获取可用模型</button>
+        </span>
+      </div>
+      <div class="llm-catalog" id="llm-catalog"></div>
+      <div class="form-row"><label>API Key</label>
+        <input id="llm-api-key" type="password" class="search" style="flex:1" placeholder="sk-...">
+      </div>
+      <p class="muted small" id="llm-hint"></p>
+      <p class="field-error" id="llm-error" hidden></p>
+    </div>
+    <div class="wizard-actions">
+      <button class="btn" id="llm-cancel">取消</button>
+      <button class="btn primary" id="llm-save">保存</button>
+    </div>
+  </div>
+</section>
+
+<!-- 关窗询问浮窗（closeAction=ask 时关窗触发） -->
+<section class="overlay wizard-overlay" id="close-overlay" hidden>
+  <div class="wizard" style="width:min(420px, calc(100vw - 32px))">
+    <div class="wizard-head"><strong>窗口已关闭</strong></div>
+    <div class="wizard-body">
+      <p>任务还会继续运行。接下来要怎么做？</p>
+    </div>
+    <div class="wizard-body">
+      <label class="muted" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="close-remember"> 记住我的选择，以后不再询问</label>
+    </div>
+    <div class="wizard-actions">
+      <button class="btn" id="close-min">最小化到托盘</button>
+      <button class="btn primary" id="close-exit">退出程序</button>
+    </div>
+  </div>
+</section>
+
+<!-- 首次运行安装屏（依赖安装期间替代主界面） -->
+<section class="overlay wizard-overlay" id="install-view" hidden>
+  <div class="wizard" style="width:min(560px, calc(100vw - 32px))">
+    <div class="wizard-head">
+      <strong>正在准备运行环境</strong>
+      <span class="muted small" id="install-elapsed">0 秒</span>
+    </div>
+    <div class="wizard-body">
+      <p>首次运行需要安装运行依赖（Playwright、托盘组件），大约 1~3 分钟，取决于网络。</p>
+      <p class="muted small">这一步只需要一次，以后打开都是秒进。期间可以最小化窗口，安装会继续。</p>
+    </div>
+    <pre class="install-log" id="install-log"></pre>
+    <div class="wizard-actions" id="install-error-row" hidden>
+      <span class="muted">安装失败，请检查网络后重试。</span>
+      <button class="btn primary" id="btn-retry-install">重试</button>
+    </div>
+  </div>
+</section>
+
+<section class="overlay wizard-overlay" id="wizard-overlay" hidden>
+  <div class="wizard" id="wizard">
+    <div class="wizard-head">
+      <strong id="wizard-title">欢迎使用 fuckmooc</strong>
+      <div class="wizard-dots" id="wizard-dots"><span class="on"></span><span></span><span></span><span></span></div>
+    </div>
+
+    <div class="wizard-body" id="wizard-step-1">
+      <p>这个工具能自动完成中国大学 MOOC 的视频、课件、课后测验与讨论。</p>
+      <p class="muted">开始前有两件事需要知道：</p>
+      <ul class="wizard-list">
+        <li>「一键完成」做完测验会<b>自动交卷</b>；每次交卷前都会弹窗让你确认，未确认不提交。</li>
+        <li>讨论回复会以你的账号<b>公开发布</b>，发出后撤不回来。</li>
+      </ul>
+      <p class="muted small">引导大约一分钟，随时可以跳过；之后都能在「课程」「设置」页修改。</p>
+    </div>
+
+    <div class="wizard-body" id="wizard-step-2" hidden>
+      <p>选择课程平台：</p>
+      <div class="wizard-platforms" id="wizard-platforms"></div>
+      <p class="gap-top">粘贴课程页面地址（浏览器地址栏那一整串）：</p>
+      <div class="form-row" style="border:0">
+        <input id="wizard-course-input" class="search" style="flex:1" placeholder="https://www.icourse163.org/learn/...">
+      </div>
+      <p class="muted small">也可以先留空跳过，之后到「课程」页添加。</p>
+    </div>
+
+    <div class="wizard-body" id="wizard-step-3" hidden>
+      <p>可选：配置答题模型，准确率更高。</p>
+      <button class="btn" id="wizard-open-llm">配置模型</button>
+      <p class="muted small" style="margin-top:10px">没有模型也完全能用：脚本自带题库、多引擎搜索与免费模型三层答题。配置模型后每题会优先问它（按量计费，一场通常几分钱）。</p>
+    </div>
+
+    <div class="wizard-body" id="wizard-step-4" hidden>
+      <p id="wizard-summary">配置完成。</p>
+      <p class="muted">下一步：回首页点「一键完成」。首次运行会弹出课程浏览器，用手机扫码登录一次，之后长期免登录。</p>
+    </div>
+
+    <div class="wizard-actions">
+      <button class="btn link" id="wizard-prev" hidden>上一步</button>
+      <button class="btn primary" id="wizard-next">开始配置</button>
+    </div>
+  </div>
+</section>
+
+<script src="/contracts.js"></script>
+<script src="/api.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
