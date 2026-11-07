@@ -1,0 +1,28 @@
+# 依赖
+node_modules/
+
+# 用户配置与运行数据
+config.txt
+data/
+
+# 调试产物
+*.log
+debug_screen.png
+error_login.png
+debug_quiz_fail_*.png
+
+# 本地工具目录
+.workbuddy/
+
+# 本地会话产物
+.zcode/
+.v2c/
+
+# 本地工作文档，不入库
+契约盘点.md
+
+# 本地审计报告，不入库
+审计报告.md
+
+# 本地构建脚本
+scripts-tmp/

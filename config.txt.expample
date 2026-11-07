@@ -1,0 +1,57 @@
+# ============================================================
+#  fuckmooc 配置文件
+#
+#  用法：把这个文件复制一份，改名成 config.txt，然后填写。
+#  用记事本打开即可，保存时编码选 UTF-8。
+#  这个文件不会被上传，里面有你的课程地址等信息。
+# ============================================================
+
+
+# ------------------------------------------------------------
+#  中国大学 MOOC（icourse163.org）
+# ------------------------------------------------------------
+
+# 课程地址：打开课程页面后，浏览器地址栏里那一整串
+# 多门课用逗号分隔
+# 例：https://www.icourse163.org/learn/XXXX-1234567?tid=8901234
+ICOURSE_COURSE_URL=
+
+# 当前选中的课程 courseKey，由图形界面「课程」页维护，一般不用手改
+# ICOURSE_ACTIVE_COURSE=
+
+# 运行方式（与界面「设置 → 运行方式」是同一份数据，由界面维护，一般不用手改）
+# RUN_PROBE=false
+# RUN_QUIZ=false
+# RUN_NO_QUIZ=false
+# RUN_DRILL=false
+# RUN_LIMIT=0
+
+# 播放倍速，平台最高支持 2
+ICOURSE_PLAYBACK_RATE=2
+
+# 文档 / 富文本类任务点的停留时长，单位毫秒（35000 = 35 秒）
+ICOURSE_DOCUMENT_STAY_MS=35000
+
+# 操作间隔，模拟真人节奏，一般不用改
+# ICOURSE_OP_DELAY_MIN=1200
+# ICOURSE_OP_DELAY_MAX=2600
+
+# 测验答题的时间预算（毫秒）。平台限时 30 分钟，默认留 5 分钟给提交
+# ICOURSE_QUIZ_BUDGET_MS=1500000
+
+# 没答出来的题超过这个比例就不提交，把 3 次机会留住
+# ICOURSE_QUIZ_MAX_MISS_RATIO=0.2
+
+# 答题模型（可选，OpenAI 兼容接口）。在图形界面「设置 → 配置模型」里更方便：
+# 预设 DeepSeek 官方，或自定义任意兼容接口（网关、自部署均可）
+# 到 platform.deepseek.com 申请 Key、充值几块钱；不配置也能正常答题，
+# 自带题库、多引擎搜索与免费模型三层
+# LLM_ENABLED=false
+# LLM_PROVIDER=deepseek
+# LLM_BASE_URL=https://api.deepseek.com
+# LLM_API_KEY=
+# LLM_MODEL=deepseek-chat
+
+# 登录态保存目录，默认在用户目录（~/.fuckmooc/icourse163-profile），一般不用改。
+# 换账号时把整个文件夹删掉即可
+# ICOURSE_PROFILE_DIR=

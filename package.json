@@ -1,0 +1,26 @@
+{
+  "name": "fuckmooc",
+  "version": "4.0.0",
+  "description": "中国大学 MOOC 课程自动化学习工具：自动看视频、翻课件、做课后测验",
+  "license": "MIT",
+  "repository": "github:xinxue-sekai/fuckmooc",
+  "author": "xinxue-sekai",
+  "keywords": [
+    "mooc",
+    "icourse163",
+    "playwright",
+    "automation"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node start.js",
+    "test": "node test/smoke.js && node test/doccheck.js",
+    "icourse163": "node start.js icourse163"
+  },
+  "dependencies": {
+    "playwright": "^1.56.1",
+    "systray2": "^2.1.4"
+  }
+}
