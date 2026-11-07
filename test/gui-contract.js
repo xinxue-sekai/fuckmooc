@@ -300,6 +300,17 @@ async function main() {
         assert.strictEqual((await r.json()).error, 'need base url and model');
     });
 
+    await test('C2m 桌面快捷方式脚本拼装（BOM/路径/图标）', () => {
+        const { buildShortcutScript } = require('../core/http-server');
+        const s = buildShortcutScript('D:\\proj', 'D:\\proj\\ui\\tray.ico');
+        assert.strictEqual(s.charCodeAt(0), 0xFEFF, '须带 UTF-8 BOM，否则 PowerShell 5.1 中文解析出错');
+        assert.ok(s.includes("fuckmooc.lnk"), '桌面文件名');
+        assert.ok(s.includes('D:\\proj\\start.vbs'), '目标 start.vbs');
+        assert.ok(s.includes('D:\\proj\\ui\\tray.ico,0'), '图标 tray.ico');
+        assert.ok(s.includes("GetFolderPath('Desktop')"), '桌面路径解析');
+        assert.ok(s.includes("$lnk.Save()"), '保存动作');
+    });
+
     await test('C2h onboarded 标记经 prefs 置位后可读回', async () => {
         await api(port, '/api/config/prefs', { method: 'POST', body: { onboarded: true } });
         assert.strictEqual((await (await api(port, '/api/config')).json()).onboarded, true);

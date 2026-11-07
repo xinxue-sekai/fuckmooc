@@ -27,6 +27,40 @@ function maskSecret(s) {
     return s.length <= 7 ? `${s[0]}***` : `${s.slice(0, 3)}****${s.slice(-4)}`;
 }
 
+// 桌面快捷方式：脚本内容与执行分离（拼装可单测）。写临时 .ps1 必须带 UTF-8 BOM，
+// 否则 PowerShell 5.1 按 ANSI 解析中文注释会吞换行导致语法错误。
+function buildShortcutScript(root, trayIcon) {
+    const ps = [
+        "$ErrorActionPreference = 'Stop'",
+        '$ws = New-Object -ComObject WScript.Shell',
+        "$desktop = [Environment]::GetFolderPath('Desktop')",
+        "$lnk = $ws.CreateShortcut((Join-Path $desktop 'fuckmooc.lnk'))",
+        `$lnk.TargetPath = '${root}\\start.vbs'`,
+        `$lnk.WorkingDirectory = '${root}'`,
+        `$lnk.IconLocation = '${trayIcon},0'`,
+        "$lnk.Description = 'fuckmooc 网课助手'",
+        '$lnk.Save()',
+        'Write-Output $desktop'
+    ].join('\r\n');
+    return '\uFEFF' + ps;
+}
+
+function createDesktopShortcut(root, trayIcon) {
+    const { spawnSync } = require('child_process');
+    const ps1 = path.join(paths().dataDir, `mkshortcut-${Date.now()}.ps1`);
+    fs.mkdirSync(paths().dataDir, { recursive: true });
+    fs.writeFileSync(ps1, buildShortcutScript(root, trayIcon), 'utf8');
+    try {
+        const r = spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', ps1], { encoding: 'utf8', timeout: 20000 });
+        if (r.status !== 0) return { ok: false, error: (r.stderr || 'PowerShell 执行失败').trim().slice(0, 200) };
+        return { ok: true, path: String(r.stdout || '').trim() };
+    } catch (e) {
+        return { ok: false, error: e.message };
+    } finally {
+        fs.rmSync(ps1, { force: true });
+    }
+}
+
 function json(res, code, data, extra = {}) {
     res.writeHead(code, {
         'content-type': 'application/json; charset=utf-8',
@@ -409,6 +443,12 @@ function createServer({ bus, token, port, state, handlers = {}, configPath = nul
             return;
         }
 
+        if (name === '/api/app/desktop-shortcut') {
+            const r = createDesktopShortcut(paths().root, path.join(paths().root, 'ui', 'tray.ico'));
+            json(res, r.ok ? 200 : 500, r);
+            return;
+        }
+
         if (name === '/api/window/closing') {
             state.set({ windowVisible: false });
             json(res, 200, { ok: true });
@@ -461,4 +501,4 @@ function createServer({ bus, token, port, state, handlers = {}, configPath = nul
     return { server, listen, close };
 }
 
-module.exports = { createServer, classifyError };
+module.exports = { createServer, classifyError, buildShortcutScript, createDesktopShortcut };

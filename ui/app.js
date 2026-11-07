@@ -533,6 +533,7 @@ function bind() {
         });
     };
     $('#btn-retry-records').onclick = () => loadRecords();
+    $('#btn-desktop-shortcut').onclick = () => createDesktopShortcut();
 
     $('#btn-start').onclick = async () => {
         if (!ui.config?.courses?.length) {
@@ -817,6 +818,16 @@ async function closeWizard() {
     document.body.classList.remove('onboarding');
     const r = await fmRequest('POST ok', '/api/config/prefs', { method: 'POST', body: { onboarded: true } });
     if (r.ok && ui.config) ui.config.onboarded = true;
+    // 首次完成顺手把带图标的快捷方式发到桌面；失败不打扰，关于页可重试
+    const s = await fmRequest('POST ok', '/api/app/desktop-shortcut', { method: 'POST' });
+    if (!s.ok) toast('桌面快捷方式创建失败，可在「关于」页重试', 'warn');
+}
+
+async function createDesktopShortcut() {
+    const r = await fmRequest('POST ok', '/api/app/desktop-shortcut', { method: 'POST' });
+    if (r.ok) toast('已在桌面创建 fuckmooc 快捷方式');
+    else toast('创建失败：' + (r.data?.error || '未知原因'), 'warn');
+    return r;
 }
 
 function maybeStartWizard() {
